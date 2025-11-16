@@ -1,0 +1,56 @@
+version: "3.9"
+
+services:
+  mysql:
+    image: mysql:8
+    container_name: mysql_bench
+    environment:
+      MYSQL_ROOT_PASSWORD: root
+      MYSQL_DATABASE: benchmark
+    ports:
+      - "3306:3306"
+    volumes:
+      - ./mysql/init.sql:/docker-entrypoint-initdb.d/init.sql
+
+  adminer:
+    image: adminer
+    container_name: adminer
+    ports:
+      - "8080:8080"
+
+  cassandra1:
+    image: cassandra:4.1
+    container_name: cassandra1
+    environment:
+      - CASSANDRA_CLUSTER_NAME=bench_cluster
+      - CASSANDRA_SEEDS=cassandra1
+    ports:
+      - "9042:9042"
+    volumes:
+      - ./cassandra:/cassandra-init
+
+  cassandra2:
+    image: cassandra:4.1
+    container_name: cassandra2
+    environment:
+      - CASSANDRA_CLUSTER_NAME=bench_cluster
+      - CASSANDRA_SEEDS=cassandra1
+    depends_on:
+      - cassandra1
+
+  cassandra3:
+    image: cassandra:4.1
+    container_name: cassandra3
+    environment:
+      - CASSANDRA_CLUSTER_NAME=bench_cluster
+      - CASSANDRA_SEEDS=cassandra1
+    depends_on:
+      - cassandra1
+
+  cassandra-web:
+    image: ipushc/cassandra-web
+    container_name: cassandra_web
+    ports:
+      - "3000:3000"
+    environment:
+      - CASSANDRA_HOST=cassandra1
